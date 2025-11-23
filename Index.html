@@ -28,7 +28,7 @@
             line-height: 1.6;
         }
         
-        /* --- STILI INTERFACCIA WEB (Monitor) --- */
+        /* --- STILI INTERFACCIA WEB --- */
         .container { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
         h1 { color: var(--robo-green); text-align: center; margin-top: 0; font-family: 'Playfair Display', serif; }
         
@@ -56,7 +56,7 @@
         
         .btn-check { background: #4b90ff; color: white; width: 100%; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px; }
         
-        /* Pulsanti Azione */
+        /* Action Group (Salva/Stampa) */
         .action-group { display: flex; gap: 10px; margin-top: 20px; }
         .btn-print { background: #333; color: white; flex: 1; }
         .btn-save { background: #f0932b; color: white; flex: 1; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding:16px; display: flex; align-items:center; justify-content:center; gap:8px;}
@@ -73,7 +73,7 @@
         .modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 12px; }
         .close-modal { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
 
-        /* --- SCHEDA RICETTA (WEB PREVIEW) --- */
+        /* --- SCHEDA RICETTA (VISUALIZZAZIONE & STAMPA) --- */
         #recipeCard { display: none; margin-top: 40px; border: 1px solid #e0e0e0; padding: 30px; border-radius: 12px; background: #fff; position: relative; }
         #recipeCard::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--robo-green); border-radius: 12px 12px 0 0; }
         
@@ -83,7 +83,6 @@
 
         .step { margin-bottom: 25px; background: #fff; }
         
-        /* Stile Web per i passi */
         .step-web-container { border-left: 4px solid var(--robo-green); padding-left: 15px; }
         .step-action-title { font-weight: bold; color: var(--robo-green); text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; display: block; margin-bottom: 6px; }
         .step-desc { font-size: 1.1em; color: #222; }
@@ -91,111 +90,86 @@
 
         /* --- RICETTARIO SALVATO --- */
         #savedRecipesContainer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; }
-        .saved-item { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; }
-        .saved-item h3 { margin: 0; font-size: 1em; color: var(--robo-dark); }
+        .saved-item { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        .saved-item h3 { margin: 0; font-size: 1.1em; color: var(--robo-dark); }
         .saved-actions { display: flex; gap: 10px; }
-        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2em; }
-        .checkbox-select { transform: scale(1.5); margin-right: 15px; cursor: pointer; }
-        .saved-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .btn-multi-print { background: #2c423b; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-multi-print:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .btn-view { background: var(--robo-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9em; }
+        .btn-view:hover { opacity: 0.9; }
+        
+        .btn-delete { background: #ffecec; color: #d32f2f; border: 1px solid #ffcdd2; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9em; }
+        .btn-delete:hover { background: #ffcdd2; }
 
-        /* CONTENITORE STAMPA MULTIPLA - Nascosto nel web normale */
-        #multiPrintArea { display: none; }
-
-        /* ========================================= */
-        /* ===          CSS STAMPA FINALE        === */
-        /* ========================================= */
+        /* ======================================================== */
+        /* === CSS STAMPA SEMPLIFICATO E ROBUSTO (NO BIANCO) === */
+        /* ======================================================== */
         @media print {
-            /* RESET BASE */
-            html, body {
+            /* 1. Nascondi tutto ciò che è interfaccia (no-print) */
+            .no-print, .input-panel, .tab-group, .section, #savedRecipesContainer, .action-group, .modal {
+                display: none !important;
+            }
+
+            /* 2. Reset del Body */
+            body, html {
                 background: white !important;
-                color: black !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
                 height: auto !important;
                 overflow: visible !important;
             }
-
-            /* NASCONDI TUTTA L'INTERFACCIA WEB DI DEFAULT */
-            .container, .modal, .no-print {
-                display: none !important;
-            }
-
-            /* --- CONFIGURAZIONE STAMPA MULTIPLA --- */
-            /* Se siamo in modalità Multipla (classe 'printing-multi' sul body) */
-            body.printing-multi #multiPrintArea {
-                display: block !important;
-                width: 100% !important;
-                position: relative !important;
-                top: 0 !important;
-                left: 0 !important;
-            }
-
-            /* Stile per ogni ricetta nel blocco multiplo */
-            .recipe-print-wrapper {
-                page-break-after: always; /* Forza nuova pagina dopo ogni ricetta */
-                break-after: page;        /* Sintassi moderna */
-                padding-top: 20px;
-                display: block !important;
-                width: 100%;
-            }
             
-            /* Evita pagina bianca finale se è l'ultima ricetta */
-            .recipe-print-wrapper:last-child {
-                page-break-after: auto;
-                break-after: auto;
-            }
-
-            /* --- CONFIGURAZIONE STAMPA SINGOLA --- */
-            /* Se NON siamo in multi, ma stiamo stampando la card corrente */
-            body:not(.printing-multi) #recipeCard {
-                display: block !important;
-                border: none !important;
+            .container {
+                box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
+                border: none !important;
             }
-            body:not(.printing-multi) #recipeCard::before { display: none; }
 
-            /* --- STILI COMUNI DI STAMPA (Layout Ricetta) --- */
+            /* 3. Forza la visibilità della Card Ricetta */
+            #recipeCard {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                width: 100% !important;
+                position: relative !important;
+            }
+            
+            #recipeCard::before { display: none; } /* Via la barra verde */
+
+            /* Layout Stampa */
             .recipe-header {
                 text-align: center;
                 border-bottom: 2px solid #000;
                 margin-bottom: 30px;
-                padding-bottom: 10px;
+                padding-bottom: 20px;
             }
             .recipe-title {
                 font-size: 24pt;
                 color: #000 !important;
-                margin-bottom: 5px;
+                margin-bottom: 10px;
             }
             .recipe-meta {
                 border: 1px solid #000;
                 color: #000;
-                padding: 2px 10px;
-                border-radius: 10px;
-                font-size: 11pt;
+                background: none !important;
             }
 
-            /* Reset container passi */
-            #stepsContainer, .steps-print-container { 
-                counter-reset: step-counter; 
-                display: block !important; 
-                width: 100%;
-            }
+            /* Contatore Passi */
+            #stepsContainer { counter-reset: step-counter; }
 
             .step {
-                display: flex !important;
+                display: flex !important; /* Forza Flexbox */
                 align-items: flex-start;
-                margin-bottom: 15px;
-                padding-bottom: 15px;
+                page-break-inside: avoid;
                 border-bottom: 1px solid #ccc;
-                page-break-inside: avoid; /* Non spezzare un passo a metà */
-                width: 100%;
+                padding-bottom: 15px;
+                margin-bottom: 15px;
             }
 
+            /* Numero Passo */
             .step::before {
                 counter-increment: step-counter;
                 content: counter(step-counter);
@@ -203,8 +177,8 @@
                 color: white !important;
                 font-weight: bold;
                 font-size: 12pt;
-                width: 28px;
-                height: 28px;
+                width: 30px;
+                height: 30px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -215,81 +189,51 @@
                 print-color-adjust: exact;
             }
 
-            .step-web-container { 
-                border-left: none !important; 
-                padding-left: 0 !important; 
-                flex: 1; /* Fondamentale per non uscire dai margini */
+            /* Contenuto Testuale (Fix Flexbox per larghezza) */
+            .step-web-container {
+                border-left: none !important;
+                padding-left: 0 !important;
+                flex: 1; /* Occupa lo spazio rimanente */
             }
 
-            .step-action-title { color: #000 !important; font-size: 11pt; margin-bottom: 2px; text-transform:uppercase; }
-            .step-desc { color: #000 !important; font-size: 11pt; line-height: 1.4; text-align: justify; }
-
-            .robo-tag {
-                border: 1px solid #000;
-                color: #000 !important;
-                background: white !important;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 9pt;
-                margin-top: 5px;
-                display: inline-block;
-            }
-
-            #printFooter, .print-footer-multi { 
-                display: block !important; 
-                text-align: center; 
-                font-size: 8pt; 
-                color: #666; 
-                margin-top: 30px; 
-                border-top: 1px solid #eee; 
-                padding-top: 10px; 
-            }
+            .step-action-title { color: #000 !important; }
+            .step-desc { color: #000 !important; }
+            .robo-tag { border: 1px solid #000; background: #fff !important; color: #000 !important; }
+            
+            #printFooter { display: block !important; text-align: center; margin-top: 50px; font-size: 10px; color: #666; }
         }
         #printFooter { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="container" id="mainAppContainer">
-        <h1 class="no-print">🍳 RoboCook <span style="font-size:0.4em; vertical-align:middle; background:#2c423b; padding:3px 8px; border-radius:10px; color:white;">v9.2 ChefGPT</span></h1>
+    <div class="container">
+        <h1 class="no-print">🍳 RoboCook <span style="font-size:0.4em; vertical-align:middle; background:#2c423b; padding:3px 8px; border-radius:10px; color:white;">ChefGPT</span></h1>
 
         <div class="section no-print">
-            <label>
-                1. Google API Key 
-                <button class="btn-help" onclick="toggleModal(true)">❓ Istruzioni</button>
-                <span id="savedBadge" style="display:none; color:green; font-size:0.8em; margin-left:10px;">(Salvata ✅)</span>
-            </label>
-            <input type="password" id="apiKey" placeholder="Incolla qui la tua chiave (AIza...)" />
+            <label>1. Google API Key <button class="btn-help" onclick="toggleModal(true)">❓</button></label>
+            <input type="password" id="apiKey" placeholder="Incolla qui la chiave..." />
             <button class="btn-check" onclick="findWorkingModel()">🔄 Connetti</button>
-            <button class="btn-remove" onclick="removeKey()" id="removeBtn" style="display:none;">🗑️ Rimuovi</button>
+            <button class="btn-remove" onclick="removeKey()" id="removeBtn" style="display:none;">🗑️</button>
             <div id="configStatus" class="status-box"></div>
             <div id="modelSelectionArea" style="display:none; margin-top:10px;">
-                <select id="modelSelect" style="width:100%; padding:8px; background:#f9f9f9; border:1px solid #ddd;"></select>
+                <select id="modelSelect" style="width:100%; padding:8px;"></select>
             </div>
         </div>
 
         <div class="section no-print">
             <label>2. Inserisci Ricetta</label>
-            
             <div class="tab-group">
                 <button class="tab-btn" onclick="switchTab('url')">🌐 Link</button>
-                <button class="tab-btn active" onclick="switchTab('text')">📝 Copia/Incolla (Sicuro)</button>
+                <button class="tab-btn active" onclick="switchTab('text')">📝 Testo</button>
             </div>
-
             <div id="panel-url" class="input-panel">
-                <input type="text" id="urlInput" placeholder="https://www.sito-ricette.it/..." />
-                <p style="font-size:0.85em; color:#666; margin-top:8px; background:#fff3cd; padding:8px; border-radius:4px;">
-                    ⚠️ <b>Nota:</b> Se il download fallisce (sito protetto), usa "Copia/Incolla".
-                </p>
+                <input type="text" id="urlInput" placeholder="https://..." />
             </div>
-
             <div id="panel-text" class="input-panel active">
-                <textarea id="recipeInput" style="height:150px" placeholder="Incolla qui il testo della ricetta..."></textarea>
+                <textarea id="recipeInput" style="height:100px" placeholder="Incolla qui il testo..."></textarea>
             </div>
-            
-            <button id="convertBtn" class="main-btn btn-primary" onclick="processRecipe()" disabled>
-                🔒 Configura API Key
-            </button>
+            <button id="convertBtn" class="main-btn btn-primary" onclick="processRecipe()" disabled>🔒 Configura API</button>
         </div>
 
         <div id="recipeCard">
@@ -302,36 +246,22 @@
         </div>
 
         <div class="action-group no-print" id="actionButtons" style="display:none;">
-            <button class="main-btn btn-print" onclick="window.print()" style="margin-top:0;">
-                🖨️ Stampa Corrente
-            </button>
-            <button class="main-btn btn-save" onclick="saveCurrentRecipe()" style="margin-top:0;">
-                💾 Salva nel Ricettario
-            </button>
+            <button class="main-btn btn-print" onclick="window.print()">🖨️ Stampa Ricetta</button>
+            <button class="main-btn btn-save" onclick="saveCurrentRecipe()">💾 Salva nel Ricettario</button>
         </div>
 
         <div id="savedRecipesContainer" class="no-print" style="display:none;">
-            <div class="saved-controls">
-                <h2 style="margin:0; font-size:1.5em; color:var(--robo-green);">📚 Il Mio Ricettario</h2>
-                <button id="multiPrintBtn" class="btn-multi-print" onclick="printSelectedRecipes()" disabled>
-                    🖨️ Stampa Selezionate (0)
-                </button>
-            </div>
+            <h2 style="margin:0 0 15px 0; font-size:1.5em; color:var(--robo-green);">📚 Il Mio Ricettario</h2>
             <div id="savedList"></div>
         </div>
 
-    </div> <div id="multiPrintArea"></div>
+    </div>
 
     <div id="helpModal" class="modal" onclick="closeModalOnClick(event)">
         <div class="modal-content">
             <span class="close-modal" onclick="toggleModal(false)">&times;</span>
-            <h2 style="color:var(--robo-green)">API Key Google</h2>
-            <ol style="padding-left:20px; line-height:1.6;">
-                <li>Vai su <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</li>
-                <li>Login con Google.</li>
-                <li>Clicca <b>"Create API Key"</b>.</li>
-                <li>Copia e incolla il codice qui.</li>
-            </ol>
+            <h2 style="color:var(--robo-green)">API Key</h2>
+            <p>Ottieni la tua chiave gratuita su <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</p>
         </div>
     </div>
 
@@ -341,6 +271,7 @@
         const RECIPE_STORAGE_KEY = 'robocook_recipes_v1';
         const API_STORAGE_KEY = 'robocook_key';
 
+        // --- GESTIONE UI BASE ---
         function switchTab(mode) {
             currentMode = mode;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -360,17 +291,17 @@
             const k = localStorage.getItem(API_STORAGE_KEY);
             if(k) {
                 document.getElementById('apiKey').value = k;
-                document.getElementById('savedBadge').style.display = 'inline';
                 document.getElementById('removeBtn').style.display = 'inline-flex';
                 findWorkingModel(true);
             }
             loadSavedRecipes(); 
         };
-        
+
         function removeKey() {
             if(confirm("Rimuovere la chiave API?")) { localStorage.removeItem(API_STORAGE_KEY); location.reload(); }
         }
 
+        // --- GESTIONE API GOOGLE ---
         async function findWorkingModel(auto=false) {
             const key = document.getElementById('apiKey').value.trim();
             const sb = document.getElementById('configStatus');
@@ -378,7 +309,6 @@
             const btn = document.getElementById('convertBtn');
 
             if(key.length<5) return !auto && alert("Manca la chiave.");
-            
             sb.style.display='block'; sb.className='status-box'; sb.innerText= auto ? "Connessione..." : "Verifica...";
 
             try {
@@ -388,7 +318,6 @@
                 
                 const mods = d.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
                 if(mods.length===0) throw new Error("Nessun modello testo.");
-                
                 mods.sort((a,b) => (b.name.includes('flash')?1:0)-(a.name.includes('flash')?1:0));
 
                 mb.innerHTML="";
@@ -399,7 +328,6 @@
                 });
 
                 localStorage.setItem(API_STORAGE_KEY, key);
-                document.getElementById('savedBadge').style.display='inline';
                 document.getElementById('removeBtn').style.display='inline-flex';
                 sb.className='status-box status-success'; sb.innerText="✅ Connesso!";
                 document.getElementById('modelSelectionArea').style.display='block';
@@ -419,22 +347,14 @@
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(htmlText, 'text/html');
                 
-                const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
-                for(const s of scripts) {
-                    if(s.innerText.includes("Recipe")) return "JSON_LD_DATA: " + s.innerText;
-                }
-                const webIngredients = doc.querySelector('.gz-list-ingredients');
-                const webSteps = doc.querySelector('.gz-content-recipe-step');
-                if (webIngredients && webSteps) {
-                    return "INGREDIENTI:\n" + webIngredients.innerText + "\n\nPROCEDIMENTO:\n" + webSteps.innerText;
-                }
-                doc.querySelectorAll('script, style, nav, footer, header, iframe, .advertisement').forEach(e => e.remove());
+                doc.querySelectorAll('script, style, nav, footer, header, iframe').forEach(e => e.remove());
                 return (doc.querySelector('main') || doc.body).innerText.substring(0, 30000);
             } catch (e) {
-                throw new Error("Sito Protetto. USA IL TAB 'COPIA/INCOLLA'.");
+                throw new Error("Sito Protetto. USA IL TAB 'Testo'.");
             }
         }
 
+        // --- CORE: GENERAZIONE RICETTA ---
         async function processRecipe() {
             const key = document.getElementById('apiKey').value.trim();
             const model = document.getElementById('modelSelect').value;
@@ -469,8 +389,7 @@
                    - Trito: 5-10s / Vel 5-8.
                    - Soffritto: 3min / 120°C / Vel 1.
                    - Cottura Sugo/Risotto: 100°C / Antiorario / Vel Soft.
-                   - Cibi Delicati (non tritare): Indica ESPLICITAMENTE di usare il "Coprilame" solo in fasi che non prevedano triturazione,frullatura o taglio.
-                   - Cottura a Vapore: Se possibile, usa il "Varoma" o setta Temp. Vapore.
+                   - Cibi Delicati (non tritare): Indica ESPLICITAMENTE "Coprilame" se necessario.
                 
                 OUTPUT JSON:
                 { "title": "...", "servings": "...", "steps": [ {"action":"...", "desc":"...", "settings":"..."} ] }
@@ -488,58 +407,84 @@
                 let raw = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const json = JSON.parse(raw);
                 
-                lastGeneratedData = json;
-
-                document.getElementById('resTitle').innerText = json.title || "Ricetta";
-                document.getElementById('resServings').innerText = json.servings || "Dosi non specificate";
-
-                out.innerHTML = "";
-                json.steps.forEach((s,i) => {
-                    out.innerHTML += `
-                    <div class="step">
-                        <div class="step-web-container">
-                            <span class="step-action-title">PASSO ${i+1}: ${s.action}</span>
-                            <div class="step-desc">${s.desc}</div>
-                            <div class="robo-tag">⚙️ ${s.settings}</div>
-                        </div>
-                    </div>`;
-                });
-                
-                actBtns.style.display = 'flex';
+                renderRecipeToCard(json);
 
             } catch(e) {
                 out.innerHTML = `<div class="status-box status-error">Errore: ${e.message}</div>`;
             }
         }
 
+        // --- RENDERIZZA I DATI NELLA SCHEDA (Funzione Unica) ---
+        function renderRecipeToCard(data) {
+            lastGeneratedData = data;
+            const titleEl = document.getElementById('resTitle');
+            const servEl = document.getElementById('resServings');
+            const out = document.getElementById('stepsContainer');
+            const card = document.getElementById('recipeCard');
+            const actBtns = document.getElementById('actionButtons');
+
+            titleEl.innerText = data.title || "Ricetta";
+            servEl.innerText = data.servings || "";
+            
+            out.innerHTML = "";
+            data.steps.forEach((s,i) => {
+                out.innerHTML += `
+                <div class="step">
+                    <div class="step-web-container">
+                        <span class="step-action-title">PASSO ${i+1}: ${s.action}</span>
+                        <div class="step-desc">${s.desc}</div>
+                        <div class="robo-tag">⚙️ ${s.settings}</div>
+                    </div>
+                </div>`;
+            });
+
+            card.style.display = 'block';
+            actBtns.style.display = 'flex';
+            card.scrollIntoView({behavior:'smooth'});
+        }
+
+        // --- GESTIONE RICETTARIO ---
         function getSavedRecipes() {
             const stored = localStorage.getItem(RECIPE_STORAGE_KEY);
             return stored ? JSON.parse(stored) : [];
         }
 
         function saveCurrentRecipe() {
-            if (!lastGeneratedData) return alert("Nessuna ricetta generata da salvare.");
+            if (!lastGeneratedData) return alert("Nessuna ricetta da salvare.");
             const recipes = getSavedRecipes();
             const newRecipe = { id: Date.now(), data: lastGeneratedData, date: new Date().toLocaleDateString() };
             recipes.unshift(newRecipe);
             localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
-            alert("Ricetta salvata nel ricettario! 💾");
+            alert("Ricetta salvata! 💾");
             loadSavedRecipes();
-            document.getElementById('savedRecipesContainer').scrollIntoView({behavior:'smooth'});
         }
 
         function deleteRecipe(id) {
-            if(!confirm("Eliminare questa ricetta dal ricettario?")) return;
+            if(!confirm("Eliminare questa ricetta?")) return;
             let recipes = getSavedRecipes();
             recipes = recipes.filter(r => r.id !== id);
             localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
             loadSavedRecipes();
         }
 
+        function viewSavedRecipe(id) {
+            const recipes = getSavedRecipes();
+            const recipe = recipes.find(r => r.id === id);
+            if(recipe) {
+                renderRecipeToCard(recipe.data);
+                // Feedback visivo
+                const badge = document.createElement('div');
+                badge.style.cssText = "background:#e8f5e9; color:#2e7d32; padding:10px; text-align:center; border-radius:8px; margin-bottom:10px;";
+                badge.innerText = "📂 Ricetta caricata dal ricettario";
+                document.getElementById('stepsContainer').prepend(badge);
+            }
+        }
+
         function loadSavedRecipes() {
             const recipes = getSavedRecipes();
             const container = document.getElementById('savedRecipesContainer');
             const list = document.getElementById('savedList');
+
             if (recipes.length === 0) {
                 container.style.display = 'none';
                 return;
@@ -550,97 +495,17 @@
                 const div = document.createElement('div');
                 div.className = 'saved-item';
                 div.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <input type="checkbox" class="checkbox-select" value="${r.id}" onchange="updatePrintCount()">
-                        <div>
-                            <h3>${r.data.title}</h3>
-                            <small style="color:#666;">${r.data.servings} • Salvata il ${r.date}</small>
-                        </div>
+                    <div>
+                        <h3>${r.data.title}</h3>
+                        <small style="color:#666;">${r.data.servings} • ${r.date}</small>
                     </div>
                     <div class="saved-actions">
-                        <button class="btn-icon" onclick="deleteRecipe(${r.id})" title="Elimina">🗑️</button>
+                        <button class="btn-view" onclick="viewSavedRecipe(${r.id})">👁️ Apri</button>
+                        <button class="btn-delete" onclick="deleteRecipe(${r.id})">🗑️</button>
                     </div>
                 `;
                 list.appendChild(div);
             });
-            updatePrintCount();
-        }
-
-        function updatePrintCount() {
-            const checked = document.querySelectorAll('.checkbox-select:checked').length;
-            const btn = document.getElementById('multiPrintBtn');
-            btn.innerText = `🖨️ Stampa Selezionate (${checked})`;
-            btn.disabled = checked === 0;
-        }
-
-        function printSelectedRecipes() {
-            const checkboxes = document.querySelectorAll('.checkbox-select:checked');
-            if (checkboxes.length === 0) return;
-
-            const recipes = getSavedRecipes();
-            const printArea = document.getElementById('multiPrintArea');
-            const mainContainer = document.getElementById('mainAppContainer'); // Riferimento al container principale
-            
-            printArea.innerHTML = "";
-
-            // Aggiungi classe al body per switch CSS
-            document.body.classList.add('printing-multi');
-
-            // --- BUGFIX: NASCONDI MANUALMENTE L'APP ---
-            // A volte il CSS non basta se il render del browser è lento. 
-            // Nascondiamo fisicamente l'interfaccia per essere sicuri che l'altezza sia calcolata sulle ricette.
-            mainContainer.style.display = 'none';
-            printArea.style.display = 'block';
-
-            checkboxes.forEach(cb => {
-                const id = parseInt(cb.value);
-                const recipe = recipes.find(r => r.id === id);
-                if (recipe) {
-                    const rData = recipe.data;
-                    let stepsHtml = "";
-                    rData.steps.forEach((s, i) => {
-                        stepsHtml += `
-                        <div class="step">
-                            <div class="step-web-container">
-                                <span class="step-action-title">PASSO ${i+1}: ${s.action}</span>
-                                <div class="step-desc">${s.desc}</div>
-                                <div class="robo-tag">⚙️ ${s.settings}</div>
-                            </div>
-                        </div>`;
-                    });
-
-                    // Nota: 'recipe-print-wrapper' ha page-break-after: always
-                    const recipeHtml = `
-                    <div class="recipe-print-wrapper">
-                        <div class="recipe-header">
-                            <h2 class="recipe-title">${rData.title}</h2>
-                            <span class="recipe-meta">${rData.servings}</span>
-                        </div>
-                        <div class="steps-print-container">
-                            ${stepsHtml}
-                        </div>
-                        <div class="print-footer-multi">Generato con RoboCook</div>
-                    </div>
-                    `;
-                    printArea.innerHTML += recipeHtml;
-                }
-            });
-
-            // Timer per dare tempo al DOM di renderizzare le immagini/font prima della finestra di stampa
-            setTimeout(() => {
-                window.print();
-                
-                // --- RIPRISTINO ---
-                // Eseguiamo dopo che l'utente chiude la finestra di stampa
-                // Nota: In alcuni browser window.print() blocca lo script, in altri no.
-                // Il timeout assicura che il ripristino avvenga DOPO l'apertura del dialog.
-                setTimeout(() => {
-                    document.body.classList.remove('printing-multi');
-                    mainContainer.style.display = 'block'; // Ripristina UI
-                    printArea.style.display = 'none';
-                    printArea.innerHTML = ""; 
-                }, 500);
-            }, 200);
         }
     </script>
 </body>
