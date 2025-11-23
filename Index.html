@@ -56,7 +56,7 @@
         
         .btn-check { background: #4b90ff; color: white; width: 100%; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px; }
         
-        /* Pulsanti Azione (Salva/Stampa) */
+        /* Pulsanti Azione */
         .action-group { display: flex; gap: 10px; margin-top: 20px; }
         .btn-print { background: #333; color: white; flex: 1; }
         .btn-save { background: #f0932b; color: white; flex: 1; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding:16px; display: flex; align-items:center; justify-content:center; gap:8px;}
@@ -100,141 +100,153 @@
         .btn-multi-print { background: #2c423b; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
         .btn-multi-print:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* CONTENITORE NASCOSTO PER STAMPA MULTIPLA */
         #multiPrintArea { display: none; }
 
-/* --- CSS SPECIFICO PER LA STAMPA (PDF) --- */
-@media print {
-    /* Reset fondamentali per evitare pagine bianche */
-    body, html { 
-        background: white !important; 
-        padding: 0 !important; 
-        margin: 0 !important; 
-        color: #000 !important; 
-        width: 100% !important;
-        max-width: 100% !important; /* Rimuove il limite di 850px che può tagliare il contenuto */
-        height: auto !important;
-        overflow: visible !important;
-    }
+        /* ========================================= */
+        /* === CORREZIONE TOTALE STAMPA (DEBUG) === */
+        /* ========================================= */
+        @media print {
+            /* 1. Reset Strutturale - Evita overflow nascosti */
+            html, body {
+                background-color: #fff !important;
+                height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
 
-    /* Assicura che il contenitore occupi tutta la pagina */
-    .container { 
-        box-shadow: none !important; 
-        padding: 0 !important; 
-        border: none !important; 
-        width: 100% !important; 
-        max-width: 100% !important; 
-        margin: 0 !important;
-    }
+            /* 2. Nascondi TUTTO di default */
+            body > * { display: none !important; }
 
-    /* Nascondi elementi interfaccia */
-    .no-print, .section, .tab-group, .input-panel, h1, button, .status-box, .modal, .action-group, #savedRecipesContainer { 
-        display: none !important; 
-    }
-    
-    /* Forza la visibilità della card ricetta */
-    #recipeCard { 
-        display: block !important; 
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-    }
-    
-    /* GESTIONE VISIBILITÀ: Se stiamo stampando Multiplo */
-    body.printing-multi #recipeCard { display: none !important; }
-    body.printing-multi #multiPrintArea { display: block !important; }
+            /* 3. Mostra SOLO il contenitore principale, ma resetta i suoi stili grafici */
+            .container {
+                display: block !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
+            }
 
-    /* Rimuovi decorazioni grafiche */
-    #recipeCard::before { display: none; } 
+            /* 4. Nascondi tutti i figli del container... */
+            .container > * { display: none !important; }
 
-    /* Layout Intestazione */
-    .recipe-header {
-        text-align: center;
-        border-bottom: 2px solid #000; /* Solido per massima leggibilità */
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-    }
-    .recipe-title {
-        font-size: 24pt;
-        color: #000 !important;
-        margin-bottom: 5px;
-    }
-    .recipe-meta {
-        border: 1px solid #000;
-        color: #000;
-        font-size: 11pt;
-        padding: 4px 10px;
-        border-radius: 10px;
-    }
+            /* 5. ...tranne la Card Ricetta (Stampa Singola) O l'Area Multipla */
+            #recipeCard, #multiPrintArea {
+                display: block !important;
+                width: 100% !important;
+                page-break-inside: auto;
+            }
+            
+            /* GESTIONE LOGICA SINGOLA vs MULTIPLA */
+            /* Se c'è la classe printing-multi, nascondi la card singola e mostra l'area multipla */
+            body.printing-multi .container > #recipeCard { display: none !important; }
+            body.printing-multi > #multiPrintArea { display: block !important; } /* Spostato logica per sicurezza */
+            
+            /* Stili Interni della Ricetta per la Stampa */
+            #recipeCard::before { display: none; } /* Via la barra colorata */
 
-    /* Reset contatori */
-    #stepsContainer, .steps-print-container { counter-reset: step-counter; }
+            .recipe-header {
+                text-align: center;
+                border-bottom: 2px solid #000;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                page-break-inside: avoid;
+            }
+            .recipe-title {
+                color: #000 !important;
+                font-size: 22pt;
+                margin-bottom: 5px;
+            }
+            .recipe-meta {
+                color: #000;
+                border: 1px solid #000;
+                background: none !important;
+            }
 
-    /* Layout Passo - CORRETTO PER EVITARE PAGINA BIANCA */
-    .step {
-        page-break-inside: avoid; /* Evita di spezzare un passo a metà tra due pagine */
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #ccc;
-        display: flex;
-        align-items: flex-start;
-        width: 100%;
-    }
-    
-    /* IL PUNTO CRITICO: Usa flex: 1 invece di width: 100% */
-    .step-web-container { 
-        border-left: none; 
-        padding-left: 0; 
-        flex: 1; /* Occupa solo lo spazio rimanente, non il 100% forzato */
-    }
+            /* FIX CRITICO: Resetta il contatore e i margini dei passi */
+            #stepsContainer, .steps-print-container { 
+                counter-reset: step-counter; 
+                display: block;
+                width: 100%;
+            }
 
-    /* Stile Numero Passo */
-    .step::before {
-        counter-increment: step-counter;
-        content: counter(step-counter);
-        background-color: #3f5e55 !important; /* !important per forzare stampa colore */
-        color: white !important;
-        font-weight: bold;
-        font-size: 12pt;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 15px;
-        flex-shrink: 0; /* Impedisce al pallino di schiacciarsi */
-        -webkit-print-color-adjust: exact; 
-        print-color-adjust: exact;
-    }
+            .step {
+                display: flex !important; /* Forza flexbox */
+                align-items: flex-start;
+                margin-bottom: 15px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #ccc;
+                page-break-inside: avoid; /* Cerca di non spezzare un passo a metà pagina */
+                width: 100%;
+                background: transparent !important;
+            }
 
-    .step-action-title { color: #000 !important; font-weight:bold; font-size: 11pt; margin-bottom: 2px; text-transform: uppercase; }
-    .step-desc { font-size: 12pt; color: #000 !important; text-align: left; margin-bottom: 5px; line-height: 1.4; }
+            /* FIX PAGINA BIANCA: Il numero del passo */
+            .step::before {
+                counter-increment: step-counter;
+                content: counter(step-counter);
+                background-color: #3f5e55 !important;
+                color: white !important;
+                font-weight: bold;
+                font-size: 12pt;
+                width: 28px; /* Ridotto leggermente */
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 15px;
+                flex-shrink: 0; /* IMPEDISCE DI SPARIRE */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
 
-    .robo-tag {
-        display: inline-block;
-        border: 1px solid #000;
-        color: #000;
-        font-size: 9pt;
-        padding: 2px 8px;
-        margin-top: 5px;
-        border-radius: 4px;
-        font-weight: bold;
-    }
+            /* FIX PAGINA BIANCA: Il contenitore del testo */
+            .step-web-container { 
+                border-left: none !important; 
+                padding-left: 0 !important; 
+                /* CRITICO: flex: 1 impedisce al div di spingere oltre il 100% della larghezza */
+                flex: 1; 
+                width: auto !important; 
+            }
 
-    /* Footer di stampa */
-    #printFooter, .print-footer-multi { 
-        display: block !important; 
-        margin-top: 30px; 
-        font-size: 8pt; 
-        color: #666; 
-        text-align: center; 
-        border-top: 1px solid #ddd; 
-        padding-top: 10px;
-    }
-}
+            .step-action-title {
+                color: #000 !important;
+                font-size: 11pt;
+                text-transform: uppercase;
+                margin-bottom: 2px;
+            }
 
+            .step-desc {
+                color: #000 !important;
+                font-size: 11pt;
+                line-height: 1.4;
+            }
+
+            .robo-tag {
+                border: 1px solid #333;
+                color: #000 !important;
+                background: #fff !important;
+                padding: 2px 8px;
+                border-radius: 4px;
+                margin-top: 5px;
+                display: inline-block;
+            }
+
+            #printFooter, .print-footer-multi { 
+                display: block !important; 
+                text-align: center; 
+                font-size: 9pt; 
+                color: #555; 
+                margin-top: 30px; 
+                border-top: 1px solid #ccc;
+                padding-top: 10px;
+            }
+        }
         #printFooter { display: none; }
     </style>
 </head>
@@ -310,9 +322,9 @@
             <div id="savedList"></div>
         </div>
 
-        <div id="multiPrintArea"></div>
-
     </div>
+
+    <div id="multiPrintArea"></div>
 
     <div id="helpModal" class="modal" onclick="closeModalOnClick(event)">
         <div class="modal-content">
@@ -329,8 +341,9 @@
 
     <script>
         let currentMode = 'text';
-        let lastGeneratedData = null; // Variabile per tenere in memoria l'ultima ricetta
+        let lastGeneratedData = null; 
         const RECIPE_STORAGE_KEY = 'robocook_recipes_v1';
+        const API_STORAGE_KEY = 'robocook_key';
 
         function switchTab(mode) {
             currentMode = mode;
@@ -347,7 +360,6 @@
         function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'block' : 'none'; }
         function closeModalOnClick(e) { if(e.target==document.getElementById('helpModal')) toggleModal(false); }
 
-        const API_STORAGE_KEY = 'robocook_key';
         window.onload = function() {
             const k = localStorage.getItem(API_STORAGE_KEY);
             if(k) {
@@ -356,7 +368,7 @@
                 document.getElementById('removeBtn').style.display = 'inline-flex';
                 findWorkingModel(true);
             }
-            loadSavedRecipes(); // Carica le ricette salvate all'avvio
+            loadSavedRecipes(); 
         };
         
         function removeKey() {
@@ -461,7 +473,7 @@
                    - Trito: 5-10s / Vel 5-8.
                    - Soffritto: 3min / 120°C / Vel 1.
                    - Cottura Sugo/Risotto: 100°C / Antiorario / Vel Soft.
-                   - Cibi Delicati (non tritare): Indica ESPLICITAMENTE di usare il "Coprilame" solo in fasi che non prevedano triturazione,frullatura o taglio. L'accessorio comunque consiste in un pezzo di metallo circolare che divide in due in orizzontale il boccale coprendo la metà bassa contenente le lame. Non devi mai prevederne l'uso se, anche in una fase successiva, tutto va frullato e amalgamato, quindi inseriscilo Solo quando la parte cotta con il coprilame debba comunque dopo essere rimossa per poi ricomparire nella fase di impiattamento.
+                   - Cibi Delicati (non tritare): Indica ESPLICITAMENTE di usare il "Coprilame" solo in fasi che non prevedano triturazione,frullatura o taglio.
                    - Cottura a Vapore: Se possibile, usa il "Varoma" o setta Temp. Vapore.
                 
                 OUTPUT JSON:
@@ -480,7 +492,6 @@
                 let raw = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
                 const json = JSON.parse(raw);
                 
-                // SALVA IN MEMORIA VOLATILE
                 lastGeneratedData = json;
 
                 document.getElementById('resTitle').innerText = json.title || "Ricetta";
@@ -498,14 +509,12 @@
                     </div>`;
                 });
                 
-                actBtns.style.display = 'flex'; // Mostra bottoni Salva/Stampa
+                actBtns.style.display = 'flex';
 
             } catch(e) {
                 out.innerHTML = `<div class="status-box status-error">Errore: ${e.message}</div>`;
             }
         }
-
-        // --- NUOVE FUNZIONALITÀ DI SALVATAGGIO E STAMPA MULTIPLA ---
 
         function getSavedRecipes() {
             const stored = localStorage.getItem(RECIPE_STORAGE_KEY);
@@ -514,18 +523,10 @@
 
         function saveCurrentRecipe() {
             if (!lastGeneratedData) return alert("Nessuna ricetta generata da salvare.");
-            
             const recipes = getSavedRecipes();
-            // Aggiungi ID univoco e Timestamp
-            const newRecipe = {
-                id: Date.now(),
-                data: lastGeneratedData,
-                date: new Date().toLocaleDateString()
-            };
-            
-            recipes.unshift(newRecipe); // Aggiungi in cima
+            const newRecipe = { id: Date.now(), data: lastGeneratedData, date: new Date().toLocaleDateString() };
+            recipes.unshift(newRecipe);
             localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
-            
             alert("Ricetta salvata nel ricettario! 💾");
             loadSavedRecipes();
             document.getElementById('savedRecipesContainer').scrollIntoView({behavior:'smooth'});
@@ -543,16 +544,12 @@
             const recipes = getSavedRecipes();
             const container = document.getElementById('savedRecipesContainer');
             const list = document.getElementById('savedList');
-            const printBtn = document.getElementById('multiPrintBtn');
-
             if (recipes.length === 0) {
                 container.style.display = 'none';
                 return;
             }
-
             container.style.display = 'block';
             list.innerHTML = "";
-            
             recipes.forEach(r => {
                 const div = document.createElement('div');
                 div.className = 'saved-item';
@@ -586,9 +583,9 @@
 
             const recipes = getSavedRecipes();
             const printArea = document.getElementById('multiPrintArea');
-            printArea.innerHTML = ""; // Pulisci area stampa
+            printArea.innerHTML = "";
 
-            // Aggiungi classe al body per nascondere la card singola in CSS print
+            // Aggiungi classe al body per dire al CSS "Sto stampando multiplo, nascondi la card singola"
             document.body.classList.add('printing-multi');
 
             checkboxes.forEach(cb => {
@@ -597,7 +594,6 @@
                 if (recipe) {
                     const rData = recipe.data;
                     let stepsHtml = "";
-                    
                     rData.steps.forEach((s, i) => {
                         stepsHtml += `
                         <div class="step">
@@ -610,7 +606,7 @@
                     });
 
                     const recipeHtml = `
-                    <div class="recipe-print-wrapper">
+                    <div style="page-break-after: always; margin-bottom:40px;">
                         <div class="recipe-header">
                             <h2 class="recipe-title">${rData.title}</h2>
                             <span class="recipe-meta">${rData.servings}</span>
@@ -625,14 +621,15 @@
                 }
             });
 
-            window.print();
-
-            // Pulizia dopo la stampa (rimuovi classe per tornare normali)
-            // Nota: window.print() è bloccante su molti browser, quindi questo avviene dopo la chiusura del dialog
+            // Piccolo ritardo per assicurare il render del DOM prima della stampa
             setTimeout(() => {
-                document.body.classList.remove('printing-multi');
-                printArea.innerHTML = ""; 
-            }, 1000);
+                window.print();
+                // Pulizia post-stampa ritardata
+                setTimeout(() => {
+                    document.body.classList.remove('printing-multi');
+                    printArea.innerHTML = ""; 
+                }, 1000);
+            }, 100);
         }
     </script>
 </body>
