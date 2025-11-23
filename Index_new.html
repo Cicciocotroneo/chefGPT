@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoboCook - ChefGPT</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        :root { 
+            --robo-green: #3f5e55; 
+            --robo-dark: #2c423b;
+            --bg-color: #f4f7f6; 
+            --error-red: #ffecec;
+            --success-green: #e8f5e9;
+            --tab-active: #2c423b;
+            --tab-inactive: #e0e0e0;
+        }
+        
+        body { 
+            font-family: 'Lato', sans-serif; 
+            background: var(--bg-color); 
+            padding: 20px; 
+            color: #333; 
+            max-width: 850px; 
+            margin: 0 auto; 
+            line-height: 1.6;
+        }
+        
+        /* --- STILI INTERFACCIA WEB (Monitor) --- */
+        .container { background: white; padding: 2rem; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        h1 { color: var(--robo-green); text-align: center; margin-top: 0; font-family: 'Playfair Display', serif; }
+        
+        .section { margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee; }
+        
+        /* INPUT UI */
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #555; }
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit; font-size: 14px; }
+        
+        /* TABS */
+        .tab-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #666; background: var(--tab-inactive); transition: 0.2s; }
+        .tab-btn.active { background: var(--tab-active); color: white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        
+        .input-panel { display: none; }
+        .input-panel.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* BOTTONI */
+        button.main-btn { width: 100%; padding: 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 15px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        .btn-primary { background: var(--robo-green); color: white; box-shadow: 0 4px 10px rgba(63, 94, 85, 0.3); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .btn-check { background: #4b90ff; color: white; width: 100%; padding: 10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px; }
+        
+        /* Pulsanti Azione (Salva/Stampa) */
+        .action-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-print { background: #333; color: white; flex: 1; }
+        .btn-save { background: #f0932b; color: white; flex: 1; border:none; border-radius:8px; font-weight:bold; cursor:pointer; padding:16px; display: flex; align-items:center; justify-content:center; gap:8px;}
+        .btn-save:hover { background: #d35400; }
+        
+        .btn-help { background: #eef5f3; color: var(--robo-green); border: 1px solid #dce4e2; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; cursor: pointer; border-radius: 4px; }
+        .btn-remove { background: transparent; color: #999; border: 1px solid #ddd; padding: 8px; font-size: 12px; margin-top: 5px; cursor: pointer; border-radius: 4px; }
+
+        /* STATUS BOX & MODAL */
+        .status-box { padding: 15px; border-radius: 8px; font-size: 0.95em; margin-top: 15px; display: none; }
+        .status-error { background: var(--error-red); color: #d32f2f; border: 1px solid #ffcdd2; }
+        .status-success { background: var(--success-green); color: #2e7d32; border: 1px solid #c8e6c9; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 12px; }
+        .close-modal { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+
+        /* --- SCHEDA RICETTA (WEB PREVIEW) --- */
+        #recipeCard { display: none; margin-top: 40px; border: 1px solid #e0e0e0; padding: 30px; border-radius: 12px; background: #fff; position: relative; }
+        #recipeCard::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--robo-green); border-radius: 12px 12px 0 0; }
+        
+        .recipe-header { border-bottom: 2px dashed #eee; margin-bottom: 25px; padding-bottom: 15px; }
+        .recipe-title { font-family: 'Playfair Display', serif; font-size: 2em; color: var(--robo-green); margin: 0 0 10px 0; font-weight: 700; }
+        .recipe-meta { font-size: 1em; color: #555; font-weight: bold; background: #f0f0f0; padding: 6px 15px; border-radius: 20px; display: inline-block; }
+
+        .step { margin-bottom: 25px; background: #fff; }
+        
+        /* Stile Web per i passi */
+        .step-web-container { border-left: 4px solid var(--robo-green); padding-left: 15px; }
+        .step-action-title { font-weight: bold; color: var(--robo-green); text-transform: uppercase; font-size: 0.85em; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+        .step-desc { font-size: 1.1em; color: #222; }
+        .robo-tag { display: inline-block; background: #eef5f3; padding: 6px 12px; border-radius: 6px; font-size: 0.95em; font-weight: bold; margin-top: 10px; color: #2c423b; border: 1px solid #dce4e2; font-family: 'Roboto Mono', monospace; }
+
+        /* --- RICETTARIO SALVATO --- */
+        #savedRecipesContainer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; }
+        .saved-item { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid #ddd; padding: 10px 15px; border-radius: 8px; margin-bottom: 10px; }
+        .saved-item h3 { margin: 0; font-size: 1em; color: var(--robo-dark); }
+        .saved-actions { display: flex; gap: 10px; }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2em; }
+        .checkbox-select { transform: scale(1.5); margin-right: 15px; cursor: pointer; }
+        .saved-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .btn-multi-print { background: #2c423b; color: white; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        .btn-multi-print:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* CONTENITORE NASCOSTO PER STAMPA MULTIPLA */
+        #multiPrintArea { display: none; }
+
+        /* --- CSS SPECIFICO PER LA STAMPA (PDF) --- */
+        @media print {
+            body { background: white; padding: 0; margin: 0; color: #000; }
+            .container { box-shadow: none; padding: 0; border: none; width: 100%; max-width: 100%; }
+            .no-print, .section, .tab-group, .input-panel, h1, button, .status-box, .modal, .action-group, #savedRecipesContainer { display: none !important; }
+            
+            /* GESTIONE VISIBILITÀ: Se stiamo stampando Multiplo, nascondi la Card singola */
+            body.printing-multi #recipeCard { display: none !important; }
+            body.printing-multi #multiPrintArea { display: block !important; }
+
+            /* Layout Base Ricetta (comune a singola e multipla) */
+            .recipe-print-wrapper {
+                display: block; 
+                border: none; 
+                padding: 0; 
+                margin: 0;
+                page-break-after: always; /* Importante per la stampa multipla */
+            }
+            .recipe-print-wrapper:last-child { page-break-after: auto; }
+
+            #recipeCard::before { display: none; } 
+
+            .recipe-header {
+                text-align: center;
+                border-bottom: 3px double #3f5e55;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                padding-top: 20px;
+            }
+            .recipe-title {
+                font-size: 26pt;
+                color: #000;
+                margin-bottom: 10px;
+            }
+            .recipe-meta {
+                background: transparent;
+                border: 1px solid #ccc;
+                color: #333;
+                font-size: 10pt;
+            }
+
+            #stepsContainer, .steps-print-container { counter-reset: step-counter; }
+
+            .step {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                align-items: flex-start;
+            }
+            
+            .step-web-container { border-left: none; padding-left: 0; width: 100%; }
+
+            .step::before {
+                counter-increment: step-counter;
+                content: counter(step-counter);
+                background-color: #3f5e55;
+                color: white;
+                font-weight: bold;
+                font-size: 14pt;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 20px;
+                flex-shrink: 0;
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+            }
+
+            .step-action-title { color: #3f5e55; font-size: 11pt; margin-bottom: 5px; }
+            .step-desc { font-size: 12pt; color: #000; text-align: justify; margin-bottom: 10px; }
+
+            .robo-tag {
+                display: block;
+                width: fit-content;
+                background-color: white !important;
+                border: 2px solid #3f5e55;
+                color: #000;
+                font-size: 10pt;
+                padding: 4px 12px;
+                margin-top: 8px;
+                border-radius: 4px;
+            }
+
+            #printFooter, .print-footer-multi { 
+                display: block !important; 
+                margin-top: 50px; 
+                font-size: 8pt; 
+                color: #999; 
+                text-align: center; 
+                border-top: 1px solid #eee; 
+                padding-top: 10px;
+                font-family: sans-serif;
+            }
+        }
+        #printFooter { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="no-print">🍳 RoboCook <span style="font-size:0.4em; vertical-align:middle; background:#2c423b; padding:3px 8px; border-radius:10px; color:white;">v9.1 ChefGPT</span></h1>
+
+        <div class="section no-print">
+            <label>
+                1. Google API Key 
+                <button class="btn-help" onclick="toggleModal(true)">❓ Istruzioni</button>
+                <span id="savedBadge" style="display:none; color:green; font-size:0.8em; margin-left:10px;">(Salvata nel PC ✅)</span>
+            </label>
+            <input type="password" id="apiKey" placeholder="Incolla qui la tua chiave (AIza...)" />
+            <button class="btn-check" onclick="findWorkingModel()">🔄 Connetti</button>
+            <button class="btn-remove" onclick="removeKey()" id="removeBtn" style="display:none;">🗑️ Rimuovi</button>
+            <div id="configStatus" class="status-box"></div>
+            <div id="modelSelectionArea" style="display:none; margin-top:10px;">
+                <select id="modelSelect" style="width:100%; padding:8px; background:#f9f9f9; border:1px solid #ddd;"></select>
+            </div>
+        </div>
+
+        <div class="section no-print">
+            <label>2. Inserisci Ricetta</label>
+            
+            <div class="tab-group">
+                <button class="tab-btn" onclick="switchTab('url')">🌐 Link</button>
+                <button class="tab-btn active" onclick="switchTab('text')">📝 Copia/Incolla (Sicuro)</button>
+            </div>
+
+            <div id="panel-url" class="input-panel">
+                <input type="text" id="urlInput" placeholder="https://www.sito-ricette.it/..." />
+                <p style="font-size:0.85em; color:#666; margin-top:8px; background:#fff3cd; padding:8px; border-radius:4px;">
+                    ⚠️ <b>Nota:</b> Se il download fallisce (sito protetto), usa "Copia/Incolla".
+                </p>
+            </div>
+
+            <div id="panel-text" class="input-panel active">
+                <textarea id="recipeInput" style="height:150px" placeholder="Incolla qui il testo della ricetta..."></textarea>
+            </div>
+            
+            <button id="convertBtn" class="main-btn btn-primary" onclick="processRecipe()" disabled>
+                🔒 Configura API Key
+            </button>
+        </div>
+
+        <div id="recipeCard">
+            <div class="recipe-header">
+                <h2 id="resTitle" class="recipe-title">...</h2>
+                <span id="resServings" class="recipe-meta">...</span>
+            </div>
+            <div id="stepsContainer"></div>
+            <div id="printFooter">Ricetta generata e ottimizzata per Robot da Cucina da AI Converter.</div>
+        </div>
+
+        <div class="action-group no-print" id="actionButtons" style="display:none;">
+            <button class="main-btn btn-print" onclick="window.print()" style="margin-top:0;">
+                🖨️ Stampa Corrente
+            </button>
+            <button class="main-btn btn-save" onclick="saveCurrentRecipe()" style="margin-top:0;">
+                💾 Salva nel Ricettario
+            </button>
+        </div>
+
+        <div id="savedRecipesContainer" class="no-print" style="display:none;">
+            <div class="saved-controls">
+                <h2 style="margin:0; font-size:1.5em; color:var(--robo-green);">📚 Il Mio Ricettario</h2>
+                <button id="multiPrintBtn" class="btn-multi-print" onclick="printSelectedRecipes()" disabled>
+                    🖨️ Stampa Selezionate (0)
+                </button>
+            </div>
+            <div id="savedList"></div>
+        </div>
+
+        <div id="multiPrintArea"></div>
+
+    </div>
+
+    <div id="helpModal" class="modal" onclick="closeModalOnClick(event)">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleModal(false)">&times;</span>
+            <h2 style="color:var(--robo-green)">API Key Google</h2>
+            <ol style="padding-left:20px; line-height:1.6;">
+                <li>Vai su <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>.</li>
+                <li>Login con Google.</li>
+                <li>Clicca <b>"Create API Key"</b>.</li>
+                <li>Copia e incolla il codice qui.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'text';
+        let lastGeneratedData = null; // Variabile per tenere in memoria l'ultima ricetta
+        const RECIPE_STORAGE_KEY = 'robocook_recipes_v1';
+
+        function switchTab(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+            if(mode === 'text') {
+                document.querySelectorAll('button[onclick="switchTab(\'text\')"]')[0].classList.add('active');
+                document.getElementById('panel-text').classList.add('active');
+            } else {
+                document.querySelectorAll('button[onclick="switchTab(\'url\')"]')[0].classList.add('active');
+                document.getElementById('panel-url').classList.add('active');
+            }
+        }
+        function toggleModal(show) { document.getElementById('helpModal').style.display = show ? 'block' : 'none'; }
+        function closeModalOnClick(e) { if(e.target==document.getElementById('helpModal')) toggleModal(false); }
+
+        const API_STORAGE_KEY = 'robocook_key';
+        window.onload = function() {
+            const k = localStorage.getItem(API_STORAGE_KEY);
+            if(k) {
+                document.getElementById('apiKey').value = k;
+                document.getElementById('savedBadge').style.display = 'inline';
+                document.getElementById('removeBtn').style.display = 'inline-flex';
+                findWorkingModel(true);
+            }
+            loadSavedRecipes(); // Carica le ricette salvate all'avvio
+        };
+        
+        function removeKey() {
+            if(confirm("Rimuovere la chiave API?")) { localStorage.removeItem(API_STORAGE_KEY); location.reload(); }
+        }
+
+        async function findWorkingModel(auto=false) {
+            const key = document.getElementById('apiKey').value.trim();
+            const sb = document.getElementById('configStatus');
+            const mb = document.getElementById('modelSelect');
+            const btn = document.getElementById('convertBtn');
+
+            if(key.length<5) return !auto && alert("Manca la chiave.");
+            
+            sb.style.display='block'; sb.className='status-box'; sb.innerText= auto ? "Connessione..." : "Verifica...";
+
+            try {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                const d = await r.json();
+                if(d.error) throw new Error(d.error.message);
+                
+                const mods = d.models.filter(m => m.supportedGenerationMethods?.includes("generateContent"));
+                if(mods.length===0) throw new Error("Nessun modello testo.");
+                
+                mods.sort((a,b) => (b.name.includes('flash')?1:0)-(a.name.includes('flash')?1:0));
+
+                mb.innerHTML="";
+                mods.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.name.replace('models/',''); opt.text = opt.value;
+                    mb.appendChild(opt);
+                });
+
+                localStorage.setItem(API_STORAGE_KEY, key);
+                document.getElementById('savedBadge').style.display='inline';
+                document.getElementById('removeBtn').style.display='inline-flex';
+                sb.className='status-box status-success'; sb.innerText="✅ Connesso!";
+                document.getElementById('modelSelectionArea').style.display='block';
+                btn.disabled=false; btn.innerHTML="✨ <b>Genera Ricetta Robot</b>"; btn.style.background="#2e7d32";
+
+            } catch(e) {
+                sb.className='status-box status-error'; sb.innerText="❌ Errore: " + e.message;
+            }
+        }
+
+        async function fetchWebPage(url) {
+            try {
+                const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error("Sito bloccato.");
+                const htmlText = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                
+                const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
+                for(const s of scripts) {
+                    if(s.innerText.includes("Recipe")) return "JSON_LD_DATA: " + s.innerText;
+                }
+                const webIngredients = doc.querySelector('.gz-list-ingredients');
+                const webSteps = doc.querySelector('.gz-content-recipe-step');
+                if (webIngredients && webSteps) {
+                    return "INGREDIENTI:\n" + webIngredients.innerText + "\n\nPROCEDIMENTO:\n" + webSteps.innerText;
+                }
+                doc.querySelectorAll('script, style, nav, footer, header, iframe, .advertisement').forEach(e => e.remove());
+                return (doc.querySelector('main') || doc.body).innerText.substring(0, 30000);
+            } catch (e) {
+                throw new Error("Sito Protetto. USA IL TAB 'COPIA/INCOLLA'.");
+            }
+        }
+
+        async function processRecipe() {
+            const key = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            const out = document.getElementById('stepsContainer');
+            const card = document.getElementById('recipeCard');
+            const actBtns = document.getElementById('actionButtons');
+
+            out.innerHTML = '<div style="text-align:center; padding:30px; color:#666;">⏳ <b>Analisi in corso...</b></div>';
+            card.style.display='block'; actBtns.style.display='none';
+            card.scrollIntoView({behavior:'smooth'});
+
+            try {
+                let textData = "";
+                if(currentMode === 'url') {
+                    const url = document.getElementById('urlInput').value;
+                    if(!url) throw new Error("Manca URL");
+                    out.innerHTML = '<div style="text-align:center; padding:30px;">🌐 Scarico dati...</div>';
+                    textData = await fetchWebPage(url);
+                } else {
+                    textData = document.getElementById('recipeInput').value;
+                    if(!textData) throw new Error("Manca il testo");
+                }
+
+                out.innerHTML = '<div style="text-align:center; padding:30px;">🤖 <b>Conversione Robot...</b></div>';
+
+                const PROMPT = `
+                Sei un esperto Chef per Robot da cucina multifunzione.
+                REGOLE:
+                1. Estrai Titolo e Porzioni.
+                2. SCRIVI QUANTITÀ nel testo (es. "Aggiungere 100g zucchero").
+                3. MAPPING:
+                   - Trito: 5-10s / Vel 5-8.
+                   - Soffritto: 3min / 120°C / Vel 1.
+                   - Cottura Sugo/Risotto: 100°C / Antiorario / Vel Soft.
+                   - Cibi Delicati (non tritare): Indica ESPLICITAMENTE di usare il "Coprilame".
+                   - Cottura a Vapore: Se possibile, usa il "Varoma" o setta Temp. Vapore.
+                
+                OUTPUT JSON:
+                { "title": "...", "servings": "...", "steps": [ {"action":"...", "desc":"...", "settings":"..."} ] }
+                `;
+
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ contents: [{ parts: [{ text: PROMPT + "\n\nDATI:\n" + textData }] }] })
+                });
+
+                const d = await r.json();
+                if(d.error) throw new Error(d.error.message);
+
+                let raw = d.candidates[0].content.parts[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
+                const json = JSON.parse(raw);
+                
+                // SALVA IN MEMORIA VOLATILE
+                lastGeneratedData = json;
+
+                document.getElementById('resTitle').innerText = json.title || "Ricetta";
+                document.getElementById('resServings').innerText = json.servings || "Dosi non specificate";
+
+                out.innerHTML = "";
+                json.steps.forEach((s,i) => {
+                    out.innerHTML += `
+                    <div class="step">
+                        <div class="step-web-container">
+                            <span class="step-action-title">PASSO ${i+1}: ${s.action}</span>
+                            <div class="step-desc">${s.desc}</div>
+                            <div class="robo-tag">⚙️ ${s.settings}</div>
+                        </div>
+                    </div>`;
+                });
+                
+                actBtns.style.display = 'flex'; // Mostra bottoni Salva/Stampa
+
+            } catch(e) {
+                out.innerHTML = `<div class="status-box status-error">Errore: ${e.message}</div>`;
+            }
+        }
+
+        // --- NUOVE FUNZIONALITÀ DI SALVATAGGIO E STAMPA MULTIPLA ---
+
+        function getSavedRecipes() {
+            const stored = localStorage.getItem(RECIPE_STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveCurrentRecipe() {
+            if (!lastGeneratedData) return alert("Nessuna ricetta generata da salvare.");
+            
+            const recipes = getSavedRecipes();
+            // Aggiungi ID univoco e Timestamp
+            const newRecipe = {
+                id: Date.now(),
+                data: lastGeneratedData,
+                date: new Date().toLocaleDateString()
+            };
+            
+            recipes.unshift(newRecipe); // Aggiungi in cima
+            localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
+            
+            alert("Ricetta salvata nel ricettario! 💾");
+            loadSavedRecipes();
+            document.getElementById('savedRecipesContainer').scrollIntoView({behavior:'smooth'});
+        }
+
+        function deleteRecipe(id) {
+            if(!confirm("Eliminare questa ricetta dal ricettario?")) return;
+            let recipes = getSavedRecipes();
+            recipes = recipes.filter(r => r.id !== id);
+            localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
+            loadSavedRecipes();
+        }
+
+        function loadSavedRecipes() {
+            const recipes = getSavedRecipes();
+            const container = document.getElementById('savedRecipesContainer');
+            const list = document.getElementById('savedList');
+            const printBtn = document.getElementById('multiPrintBtn');
+
+            if (recipes.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            list.innerHTML = "";
+            
+            recipes.forEach(r => {
+                const div = document.createElement('div');
+                div.className = 'saved-item';
+                div.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <input type="checkbox" class="checkbox-select" value="${r.id}" onchange="updatePrintCount()">
+                        <div>
+                            <h3>${r.data.title}</h3>
+                            <small style="color:#666;">${r.data.servings} • Salvata il ${r.date}</small>
+                        </div>
+                    </div>
+                    <div class="saved-actions">
+                        <button class="btn-icon" onclick="deleteRecipe(${r.id})" title="Elimina">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            updatePrintCount();
+        }
+
+        function updatePrintCount() {
+            const checked = document.querySelectorAll('.checkbox-select:checked').length;
+            const btn = document.getElementById('multiPrintBtn');
+            btn.innerText = `🖨️ Stampa Selezionate (${checked})`;
+            btn.disabled = checked === 0;
+        }
+
+        function printSelectedRecipes() {
+            const checkboxes = document.querySelectorAll('.checkbox-select:checked');
+            if (checkboxes.length === 0) return;
+
+            const recipes = getSavedRecipes();
+            const printArea = document.getElementById('multiPrintArea');
+            printArea.innerHTML = ""; // Pulisci area stampa
+
+            // Aggiungi classe al body per nascondere la card singola in CSS print
+            document.body.classList.add('printing-multi');
+
+            checkboxes.forEach(cb => {
+                const id = parseInt(cb.value);
+                const recipe = recipes.find(r => r.id === id);
+                if (recipe) {
+                    const rData = recipe.data;
+                    let stepsHtml = "";
+                    
+                    rData.steps.forEach((s, i) => {
+                        stepsHtml += `
+                        <div class="step">
+                            <div class="step-web-container">
+                                <span class="step-action-title">PASSO ${i+1}: ${s.action}</span>
+                                <div class="step-desc">${s.desc}</div>
+                                <div class="robo-tag">⚙️ ${s.settings}</div>
+                            </div>
+                        </div>`;
+                    });
+
+                    const recipeHtml = `
+                    <div class="recipe-print-wrapper">
+                        <div class="recipe-header">
+                            <h2 class="recipe-title">${rData.title}</h2>
+                            <span class="recipe-meta">${rData.servings}</span>
+                        </div>
+                        <div class="steps-print-container">
+                            ${stepsHtml}
+                        </div>
+                        <div class="print-footer-multi">Generato con RoboCook</div>
+                    </div>
+                    `;
+                    printArea.innerHTML += recipeHtml;
+                }
+            });
+
+            window.print();
+
+            // Pulizia dopo la stampa (rimuovi classe per tornare normali)
+            // Nota: window.print() è bloccante su molti browser, quindi questo avviene dopo la chiusura del dialog
+            setTimeout(() => {
+                document.body.classList.remove('printing-multi');
+                printArea.innerHTML = ""; 
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
