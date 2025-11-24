@@ -93,7 +93,7 @@
         .robo-tag { display: inline-block; background: #eef5f3; padding: 6px 12px; border-radius: 6px; font-size: 0.95em; font-weight: bold; margin-top: 10px; color: #2c423b; border: 1px solid #dce4e2; font-family: 'Roboto Mono', monospace; outline:none; }
 
         /* Controlli Editing (Cestino, Aggiungi) */
-        .step-controls { position: absolute; right: 0; top: 0; opacity: 0; transition: opacity 0.2s; }
+        .step-controls { position: absolute; right: 0; top: 0; opacity: 0; transition: opacity 0.2s; display: flex; flex-direction: column; gap: 5px; padding: 5px; }
         .step:hover .step-controls { opacity: 1; }
         .btn-del-step { background: #ffecec; color: #d32f2f; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
         .btn-del-step:hover { background: #ffcdd2; transform: scale(1.1); }
@@ -108,6 +108,8 @@
         .saved-actions { display: flex; gap: 10px; }
         .btn-view { background: var(--robo-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-delete { background: #ffecec; color: #d32f2f; border: 1px solid #ffcdd2; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-move { background: #f0f0f0; color: #555; border: 1px solid #ddd; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .btn-move:hover { background: var(--robo-green); color: white; border-color: var(--robo-green); }
 
         /* ======================================================== */
         /* === CSS STAMPA (PULITO E SENZA STRUMENTI EDIT) === */
@@ -388,6 +390,8 @@
                 out.innerHTML += `
                 <div class="step">
                     <div class="step-controls">
+                    ${i > 0 ? `<button class="btn-move" title="Sposta Su" onclick="moveStep(${i}, -1)">▲</button>` : ''}
+                        ${i < data.steps.length - 1 ? `<button class="btn-move" title="Sposta Giù" onclick="moveStep(${i}, 1)">▼</button>` : ''}
                         <button class="btn-del-step" title="Elimina Passo" onclick="removeStep(${i})">🗑️</button>
                     </div>
                     <div class="step-web-container">
@@ -417,6 +421,18 @@
             if(!confirm("Eliminare questo passaggio?")) return;
             lastGeneratedData.steps.splice(index, 1);
             renderRecipeToCard(lastGeneratedData); // Ridisegna per aggiornare gli indici
+        }
+
+        function moveStep(index, direction) {
+            if (!lastGeneratedData) return;
+            const newIndex = index + direction;
+            
+            // Scambio degli elementi nell'array
+            const temp = lastGeneratedData.steps[index];
+            lastGeneratedData.steps[index] = lastGeneratedData.steps[newIndex];
+            lastGeneratedData.steps[newIndex] = temp;
+
+            renderRecipeToCard(lastGeneratedData);
         }
 
         function addNewStep() {
